@@ -1,0 +1,2 @@
+[*.{php,inc}]
+indent_size = 2

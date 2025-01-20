@@ -160,4 +160,5 @@ function processDeploy(string $repository, array $gitRepos, $callback) {
     }
     else echo "repository:access_key not found\n";
   }
+  else echo "404 - repository not found!\n";
 }

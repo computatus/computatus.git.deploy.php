@@ -1,42 +1,43 @@
 <?php
 
-$contents = file_get_contents('php://input') ?? $_POST;
-$contents = empty($contents) ? $_POST : $contents;
-$data = json_decode($contents);
+$contents = file_get_contents('php://input') ?? $_REQUEST;
+$contents = empty($contents) ? (object) $_REQUEST : $contents;
+$data = is_string($contents) ? json_decode($contents) : $contents;
 $repository = $data->repository ?? null;
 
 try {
   $baseDir = env('REPOSITORY_BASEDIR');
+  $baseDir = realpath($baseDir);
   $gitRepos = findGitRepositories($baseDir);
   foreach ($gitRepos as $k => $gitRepo)
     $gitRepos[$k] = findGitRepositoryInfo($gitRepo);
   if ($repository) {
-    processDeploy($repository, $gitRepos, function($url) {
+    processDeploy($repository, $gitRepos, function() {
       $path = getcwd();
       $user = str_replace(["\n","\r"], '', shell_exec('whoami'));
       echo "[server] current user: \"$user\"\n";
       echo "[server] current path: \"$path\"\n";
-      echo "[server/git] output: \n";
-      echo shell_exec(sprintf('git checkout %s', 'master'));
-      echo shell_exec(sprintf('git pull %s 2>&1', $url));
-      echo "[server/deploy.sh] output: \n";
-      echo shell_exec('sh deploy.sh 2>&1');
       echo "[server] process finished!\n";
     });
   }
-  else {
-    echo "404 - repository not found!\n";
-  }
+  else NotFound();
 }
 catch (Exception $e) {
-  echo 'Error: '.$e->getMessage()."\n";
+  header('HTTP/1.1 500 Internal Server Error');
+  header('Content-Type: application/json');
+  echo "error: {$e->getMessage()}\n";
 }
 
 
 
 #==<-Functions->===============================================================
 
+/**
+ * @throws Exception
+ */
 function env(string $key): ?string {
+  if (!file_exists(__DIR__.'/.env'))
+    throw new Exception("'.env' could not be found.");
   $contents = file_get_contents(__DIR__.'/.env');
   $lines = explode("\n", $contents);
   $props = [];
@@ -138,27 +139,36 @@ function findGitRepositoryByName(string $repo, array $repos): array {
 
 function processDeploy(string $repository, array $gitRepos, $callback) {
   if ($repos = findGitRepositoryByName($repository, $gitRepos)) {
-    $hash = env('REPOSITORY_ACCESS_KEY');
-    if ($hash) {
-      foreach ($repos as $repo) {
-        $path = "$repo->path/deploy.sh";
-        echo "checking \"$path\"...\n";
-        if (realpath($path) && chdir($repo->path)) {
-          echo "[deploy] \"$path\" repository found!\n";
-          $origin = null;
-          foreach ($repo->remotes as $remote)
-            if ($remote->type == 'push') $origin = $remote;
-          if ($origin) {
-            echo "[origin] \"$origin->domain/$origin->owner/$repo->name\" found!\n";
-            $url = "https://$hash@$origin->domain/$origin->owner/$repo->name";
-            if ($callback) $callback($url);
-          }
-          else echo "repository:origin not found\n";
-        }
-        else echo "deploy.sh not found!\n";
+    $repos = array_values($repos);
+    foreach ($repos as $repo) {
+
+      putenv("HOME=$repo->path");
+      putenv("GIT_SSH_COMMAND=ssh -i $repo->path/.ssh/github_deploy -o StrictHostKeyChecking=no");
+      exec('git pull 2>&1', $output, $returnCode);
+      if ($returnCode !== 0) throw new Error("❌ steps fail (code $returnCode)\n");
+
+      header('Content-Type: text/plain');
+      $path = "$repo->path/deploy.sh";
+      echo "checking \"$path\"...\n";
+      if (realpath($path) && chdir($repo->path)) {
+        echo "[deploy] \"$path\" repository found!\n";
+        if ($callback) $callback();
       }
+      else echo "deploy.sh not found!\n";
     }
-    else echo "repository:access_key not found\n";
   }
-  else echo "404 - repository not found!\n";
+  else NotFound();
+}
+
+function dd(...$argv) {
+  header('Content-Type: application/json');
+  echo json_encode(count($argv) === 1 ? $argv[0] : $argv);
+  die();
+}
+
+function NotFound() {
+  header('HTTP/1.1 404 Not Found');
+  header('Content-Type: application/json');
+  echo "404 - repository not found!\n";
+  die();
 }

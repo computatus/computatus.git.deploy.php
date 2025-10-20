@@ -9,7 +9,7 @@ export RAW_JSON=$(cat)
 /usr/bin/php <<'EOF'
 <?php
 
-$_POST = getenv('RAW_JSON');
+$_BASH = getenv('RAW_JSON');
 require_once realpath('ci-cd.inc');
 
 ?>

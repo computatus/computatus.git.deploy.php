@@ -43,7 +43,8 @@ final class GitDeployer {
   }
 
   private function getRequestData(): object {
-    $raw = file_get_contents('php://input') ?: json_encode($_REQUEST) ?: json_encode($_POST);
+    global $_BASH;
+    $raw = $_BASH ?: file_get_contents('php://input') ?: json_encode($_REQUEST);
     $data = json_decode($raw);
     if (json_last_error() !== JSON_ERROR_NONE)
       throw new InvalidArgumentException('Invalid JSON input data');

@@ -51,15 +51,55 @@ final class GitDeployProcessor {
 
       $deployScriptPath = "$repo->path/deploy.sh";
       if (realpath($deployScriptPath) && chdir($repo->path)) {
-        exec('./deploy.sh', $output, $status);
-        if ($status !== 0) {
-          echo "[deploy.sh] deploy.sh exited with status $status\n";
-          foreach ($output as $line) echo "[deploy.sh] $line\n";
+        while(ob_get_level()) ob_end_flush();
+        ob_implicit_flush();
+
+        $cmd = 'stdbuf -oL -eL ./deploy.sh';
+        $descriptorSpec = [
+          1 => ['pipe', 'w'],
+          2 => ['pipe', 'w']
+        ];
+        $process = proc_open($cmd, $descriptorSpec, $pipes);
+        if (!is_resource($process)) {
+          echo "[deploy.sh] Failed to start process\n";
           exit;
         }
 
-        foreach ($output as $line) echo "[deploy.sh] $line\n";
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
 
+        while(true) {
+          $stdout = stream_get_contents($pipes[1]);
+          $stderr = stream_get_contents($pipes[2]);
+
+          if ($stdout !== '') {
+            foreach (explode("\n", trim($stdout)) as $line) {
+              if ($line !== '') echo "[deploy.sh] $line\n";
+            }
+          }
+
+          if ($stderr !== '') {
+            foreach (explode("\n", trim($stderr)) as $line) {
+              if ($line !== '') echo "[deploy.sh][ERR] $line\n";
+            }
+          }
+
+          flush();
+
+          $status = proc_get_status($process);
+          if (!$status['running']) break;
+
+          usleep(100000);
+
+        }
+
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0) {
+          echo "[deploy.sh] deploy.sh exited with status $exitCode\n\n";
+          exit;
+        }
+        echo "[deploy.sh] Deploy finished successfully\n\n";
       }
       else echo "[deploy.sh] deploy.sh not found!\n\n";
     }

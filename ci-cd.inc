@@ -1,6 +1,9 @@
 <?php
 namespace Computatus\GitDeploy;
 
+http_response_code(202);
+ob_end_flush();
+
 include 'helpers.php';
 include 'classes/EnvLoader.php';
 include 'classes/GitDeployer.php';

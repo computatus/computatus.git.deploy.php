@@ -77,14 +77,12 @@ final class GitDeployProcessor {
         $args .= "--mode=deploy ";
         $args .= isset($this->data->step) ? "--step={$this->data->step}" : '';
 
-        $extraCmd = !$isWindows ? '' : '';
+        $extraCmd = !$isWindows ? 'stdbuf -oL -eL sh ./' : '';
         $cmd = "$extraCmd deploy.{$deployScriptExt} $args";
         $descriptorSpec = [
           1 => ['pipe', 'w'],
           2 => ['pipe', 'w']
         ];
-
-        echo "[deploy.$deployScriptExt] $cmd running...\n";
         $process = proc_open($cmd, $descriptorSpec, $pipes);
         if (!is_resource($process)) {
           echo "[deploy.$deployScriptExt] Failed to start process\n";

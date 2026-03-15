@@ -78,7 +78,7 @@ final class GitDeployProcessor {
         $args .= isset($this->data->step) ? "--step={$this->data->step}" : '';
 
         $extraCmd = !$isWindows ? 'stdbuf -oL -eL ./' : '';
-        $cmd = "$extraCmd deploy.{$deployScriptExt} $args";
+        $cmd = "{$extraCmd}deploy.{$deployScriptExt} $args";
         $descriptorSpec = [
           1 => ['pipe', 'w'],
           2 => ['pipe', 'w']

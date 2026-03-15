@@ -83,6 +83,8 @@ final class GitDeployProcessor {
           1 => ['pipe', 'w'],
           2 => ['pipe', 'w']
         ];
+
+        echo "[deploy.$deployScriptExt] $cmd running...\n";
         $process = proc_open($cmd, $descriptorSpec, $pipes);
         if (!is_resource($process)) {
           echo "[deploy.$deployScriptExt] Failed to start process\n";

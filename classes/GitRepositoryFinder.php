@@ -20,7 +20,6 @@ final class GitRepositoryFinder {
     foreach ($iterator as $path) {
       if ($path->isDir() && basename($path) === '.git') $repositories[] = dirname($path->getPathname());
     }
-
     return $repositories;
   }
 

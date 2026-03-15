@@ -18,22 +18,23 @@ final class GitDeployer {
 
   public function handleRequest(): void {
     try {
-      $data = $this->getRequestData();
+      $data = $this->getRequestData();      
       $repository = $data->repository ?? null;
-
       if (!$repository) {
         http_response_code(404);
+        header('HTTP/1.0 404 Not Found');
+        header('Content-Type: text/plain');
         echo "404 - repository not found!\n";
         return;
       }
-
       $baseDir = $this->env->get('REPOSITORY_BASEDIR');
       if (!$baseDir) throw new RuntimeException("Missing REPOSITORY_BASEDIR in .env");
 
       $repos = $this->finder->find($baseDir);
       $repos = array_map([$this->finder, 'getInfo'], $repos);
 
-      $deploy = new GitDeployProcessor($repos);
+      $deploy = new GitDeployProcessor($repos, $this->env, $data);
+
       $deploy->process($repository);
     }
     catch (Throwable $e) {

@@ -86,7 +86,7 @@ final class GitDeployProcessor {
         ];
         $process = proc_open($cmd, $descriptorSpec, $pipes);
         if (!is_resource($process)) {
-          echo "[deploy.$deployScriptExt] Failed to start process\n";
+          echo "[make.$deployScriptExt] Failed to start process\n";
           exit;
         }
 

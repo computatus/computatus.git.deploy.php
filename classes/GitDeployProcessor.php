@@ -73,7 +73,7 @@ final class GitDeployProcessor {
         while(ob_get_level()) ob_end_flush();
         ob_implicit_flush();
 
-        $args  = "--environment={$this->env->get('ENVIRONMENT')} ";
+        $args  = "--env={$this->env->get('ENVIRONMENT')} ";
         $args .= "--mode=deploy ";
         $args .= isset($this->data->step) ? "--step={$this->data->step}" : '';
 

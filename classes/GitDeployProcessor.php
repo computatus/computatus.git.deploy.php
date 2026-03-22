@@ -68,7 +68,7 @@ final class GitDeployProcessor {
       $isWindows = PHP_OS_FAMILY === 'Windows';
 
       $deployScriptExt = $isWindows ? 'bat' : 'sh';
-      $deployScriptPath = "$repo->path/deploy.{$deployScriptExt}";
+      $deployScriptPath = "$repo->path/make.{$deployScriptExt}";
       if (realpath($deployScriptPath) && chdir($repo->path)) {
         while(ob_get_level()) ob_end_flush();
         ob_implicit_flush();
@@ -121,12 +121,12 @@ final class GitDeployProcessor {
         $exitCode = proc_close($process);
 
         if ($exitCode !== 0) {
-          echo "[deploy.$deployScriptExt] deploy.$deployScriptExt exited with status $exitCode\n\n";
+          echo "[deploy.$deployScriptExt] make.$deployScriptExt exited with status $exitCode\n\n";
           exit;
         }
         echo "[deploy.$deployScriptExt] Deploy finished successfully\n\n";
       }
-      else echo "[deploy.$deployScriptExt] deploy.$deployScriptExt not found!\n\n";
+      else echo "[deploy.$deployScriptExt] make.$deployScriptExt not found!\n\n";
     }
   }
 

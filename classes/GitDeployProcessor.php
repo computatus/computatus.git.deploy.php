@@ -75,8 +75,8 @@ final class GitDeployProcessor {
 
         $args  = "--env={$this->env->get('ENVIRONMENT')} ";
         $args .= "--mode=deploy ";
-        $args .= isset($this->data->step) ? "--mode={$this->data->mode}" : '';
-        $args .= isset($this->data->step) ? "--step={$this->data->step}" : '';
+        $args .= isset($this->data->step) ? "--mode={$this->data->mode} " : '';
+        $args .= isset($this->data->step) ? "--step={$this->data->step} " : '';
 
         $extraCmd = !$isWindows ? 'stdbuf -oL -eL ./' : '';
         $cmd = "{$extraCmd}make.{$deployScriptExt} $args";

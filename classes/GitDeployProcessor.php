@@ -78,7 +78,7 @@ final class GitDeployProcessor {
         $args .= isset($this->data->step) ? "--step={$this->data->step}" : '';
 
         $extraCmd = !$isWindows ? 'stdbuf -oL -eL ./' : '';
-        $cmd = "{$extraCmd}deploy.{$deployScriptExt} $args";
+        $cmd = "{$extraCmd}make.{$deployScriptExt} $args";
         echo "[deploy.$deployScriptExt] $cmd running...\n";
         $descriptorSpec = [
           1 => ['pipe', 'w'],
@@ -99,13 +99,13 @@ final class GitDeployProcessor {
 
           if ($stdout !== '') {
             foreach (explode("\n", trim($stdout)) as $line) {
-              if ($line !== '') echo "[deploy.$deployScriptExt] $line\n";
+              if ($line !== '') echo "[make.$deployScriptExt] $line\n";
             }
           }
 
           if ($stderr !== '') {
             foreach (explode("\n", trim($stderr)) as $line) {
-              if ($line !== '') echo "[deploy.$deployScriptExt][ERR] $line\n";
+              if ($line !== '') echo "[make.$deployScriptExt][ERR] $line\n";
             }
           }
 
